@@ -8,6 +8,7 @@ const fastify = require('fastify')
 switch (process.env.NODE_ENV) {
 case 'development':
   logger = pino({
+    name: 'Fastify',
     prettyPrint: { colorize: true },
     level: 'debug'
   })
@@ -19,17 +20,18 @@ case 'test':
   break
 case 'production':
   logger = pino({
+    name: 'Fastify',
     level: 'info'
   })
   break
 }
 
 function buildFastify(scannerProccess) {
-  const sLog = logger.child({ module: 'Scanner' })
+  const sLog = logger.child({ module: 'ScannerProcess' })
   scannerProccess.on('message', (msg) => {
     sLog.info('Message from child', msg)
   })
-  // scannerProccess.send({ hello: 'world' })
+  scannerProccess.send({ hello: 'world' })
 
   scannerProccess.on('close', (code, signal) => {
     sLog.info(
