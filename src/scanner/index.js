@@ -5,14 +5,22 @@ const logger = pino({
   level: 'debug'
 })
 const MusicScanner = require('./musicScanner')
+const scanner = new MusicScanner({
+  mediaFolder: './test_music'
+})
 async function run() {
-  process.on('message', (msg) => {
-    logger.info('Message from parent:', msg)
+  process.on('message', async (msg) => {
+    logger.info(`Message from parent: ${msg}`)
+    switch (msg) {
+    case 'isScanning':
+      process.send({ event: 'isScanning', value: await scanner.scanning })
+      break
+    case 'scanStart':
+      scanner.startScanning()
+      break
+    }
   })
-  const scanner = new MusicScanner({
-    mediaFolder: './test_music'
-  })
-  scanner.startScanning()
+
 /*   let counter = 0
   setInterval(() => {
     process.send({ counter: counter++ })

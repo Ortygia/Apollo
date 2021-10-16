@@ -3,16 +3,11 @@ const mm = require('music-metadata')
 const logger = require('pino')({ name: 'MusicScanner', prettyPrint: true })
 const path = require('path')
 const fsp = require('fs/promises')
-const { dir } = require('console')
 class MusicScanner {
   constructor(options = { }) {
     this.options = Object.assign(options)
     this.scanning = false
     this.mediaFolder = options.mediaFolder
-  }
-
-  async isScanning () {
-    return this.scanning
   }
 
   async initialize () {
@@ -24,9 +19,11 @@ class MusicScanner {
   }
 
   async startScanning() {
-    const now = new Date()
+    if (this.scanning) return false
+    this.scanning = true
+    /*     const now = new Date()
     const isoString = now.toISOString()
-    logger.info(isoString)
+    logger.info(isoString) */
 
     const emitter = walk(this.mediaFolder)
     emitter.on('file', async function(filename, stat) {
@@ -46,6 +43,7 @@ class MusicScanner {
         }
       }
     })
+    this.scanning = false
   }
 }
 
