@@ -11,12 +11,13 @@ const cache = setupCache({
 const api = axios.create({
   adapter: cache.adapter
 })
-async function artistPlugin(fastify) {
+async function artistPlugin(fastify, opts, done) {
   const log = fastify.log.child({ module: 'User' })
 
   const artistService = new ArtistService(log, api)
   fastify.decorate('artist', artistService)
   fastify.decorate('acache', cache)
+  done()
 }
 
 module.exports = fastifyPlugin(artistPlugin)
