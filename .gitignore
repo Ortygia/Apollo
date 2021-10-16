@@ -74,6 +74,6 @@ typings/
 
 # FuseBox cache
 .fusebox/
-
+*.sqlite
 
 test_music/
