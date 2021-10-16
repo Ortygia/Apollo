@@ -26,26 +26,25 @@ case 'production':
   break
 }
 
-function buildFastify(scannerProccess) {
-  const sLog = logger.child({ module: 'ScannerProcess' })
-  scannerProccess.on('message', (msg) => {
-    sLog.info('Message from child', msg)
-  })
-  scannerProccess.send({ hello: 'world' })
-
-  scannerProccess.on('close', (code, signal) => {
-    sLog.info(
-      `Scanner process terminated due to receipt of signal ${signal}`)
-  })
-
+async function buildFastify() {
   // Send SIGHUP to process.
   const serverInstance = fastify({
     logger: logger
   })
   serverInstance.register(require('./routes/index'))
-  serverInstance.register(require('../plugins/mApi'))
-  serverInstance.register(require('../plugins/artist/index'))
+  serverInstance.register(
+    require('../plugins/sequelize'),
+    {
+      sequelizeOptions: {
+        dialect: 'sqlite',
+        storage: 'apollo.sqlite'
+      }
+    }
+  )
 
+  serverInstance.register(require('../plugins/mApi'))
+  serverInstance.register(require('../plugins/artist/'))
+  serverInstance.register(require('../plugins/musicScanner'))
   return serverInstance
 }
 
