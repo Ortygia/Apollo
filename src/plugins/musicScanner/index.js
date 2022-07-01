@@ -1,13 +1,17 @@
 'use strict'
 const fastifyPlugin = require('fastify-plugin')
-const MusicScanner = require('./musicScanner')
+const ScannerManager = require('./scannerManager')
 
 async function musicScannerPlugin(fastify, opts, done) {
-  const musicScanner = new MusicScanner('./test_music', fastify)
-  fastify.decorate('musicScanner', musicScanner)
+  // const musicScanner = new MusicScanner('./test_music', fastify)
   const log = fastify.log.child({ module: 'Scanner' })
-  log.info('Attaching Muisc Scanenr')
-  musicScanner.startScanning()
+  log.debug('Attaching Muisc Scanner')
+
+  const manager = new ScannerManager(log)
+  manager.startChild(log)
+  fastify.decorate('scannerManager', manager)
+  log.info('Attached Muisc Scanner')
+
   done()
 }
 
