@@ -77,3 +77,4 @@ typings/
 *.sqlite
 
 test_music/
+apollo.db
