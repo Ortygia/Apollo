@@ -1,17 +1,18 @@
 {
-    "editor.detectIndentation": false,
-    "eslint.alwaysShowStatus": true,
-    "eslint.format.enable": true,
-    "eslint.lintTask.enable": true,
-    "eslint.validate": [
-            "javascript"
-    ],
-    "editor.codeActionsOnSave": {
-            "source.fixAll.eslint": true
-    },
+  "editor.detectIndentation": false,
+  "eslint.alwaysShowStatus": true,
+  "eslint.format.enable": true,
+  "eslint.lintTask.enable": true,
+  "eslint.validate": [
+          "javascript"
+  ],
+  "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true
+  },
 "files.exclude": {
 "**/.git": true,
 "**/.DS_Store": true,
+"**/.vscode": false,
 "**/__pycache__": true,
 "**/.pytest_cache": true,
 "**/node_modules": true,
@@ -34,6 +35,6 @@
 "**/venv/**": true,
 "env-*": true
 },
-"jest.jestCommandLine": "jest __tests__",
+"jest.jestCommandLine": "npx __tests__",
 
 }
