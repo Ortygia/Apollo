@@ -16,7 +16,7 @@ async function sequelizePlugin (fastify, opts, done) {
   for (const model of models) {
     model(sequelize, Sequelize.DataTypes)
   }
-  await sequelize.sync({ force: false })
+  await sequelize.sync({ force: false, logging: false })
   try {
     // first connection
     await sequelize.authenticate()
