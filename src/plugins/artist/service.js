@@ -12,7 +12,6 @@ class ArtistService {
     let banner = ''
     try {
       const tempb = await this.getFanArtArtistBanner(artistId)
-      console.log(tempb)
       banner = tempb.artistbackground[0].url
     } catch (e) {
       this.log.error(e)
@@ -27,7 +26,7 @@ class ArtistService {
       }
     }
 
-    return { image: image, bio: bio, banner: banner }
+    return { image, bio, banner }
   }
 
   async getAllMusicArtistImage(artist) {
