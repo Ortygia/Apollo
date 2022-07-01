@@ -13,7 +13,8 @@ module.exports = function (fastify, opts, done) {
     reply.status(200).send(searchArtist.artistbackground[0].url)
   })
   fastify.get('/', async (req, reply) => {
-    reply.status(200).send(fastify.musicScanner.isScanning())
+    fastify.scannerManager.startScan()
+    reply.status(200).send(fastify.scannerManager.isScanning)
   })
   done()
 }
