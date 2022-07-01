@@ -9,7 +9,6 @@ async function run() {
 
 /* function startScannerProccess() {
   const child = fork('./src/scanner/index.js')
-
   return child
 } */
 run().catch((error) => console.error(error))
