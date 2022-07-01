@@ -1,43 +1,18 @@
 'use strict'
 
 require('dotenv').config()
-let logger
-const pino = require('pino')
 const fastify = require('fastify')
-
-switch (process.env.NODE_ENV) {
-case 'development':
-  logger = pino({
-    name: 'Fastify',
-    prettyPrint: { colorize: true },
-    level: 'debug'
-  })
-  break
-case 'test':
-  logger = pino({
-    level: 'silent'
-  })
-  break
-case 'production':
-  logger = pino({
-    name: 'Fastify',
-    level: 'info'
-  })
-  break
-}
 
 async function buildFastify() {
   // Send SIGHUP to process.
-  const serverInstance = fastify({
-    logger: logger
-  })
+  const serverInstance = fastify({ logger: getLogger() })
   serverInstance.register(require('./routes/index'))
   serverInstance.register(
     require('../plugins/sequelize'),
     {
       sequelizeOptions: {
         dialect: 'sqlite',
-        storage: 'apollo.sqlite'
+        storage: 'apollo.db'
       }
     }
   )
@@ -57,11 +32,65 @@ async function start(server) {
       process.exit(0)
     })
   })
-  server.listen(3001, '0.0.0.0', (err, address) => {
-    if (err) {
-      server.log.error(err)
-      process.exit(1)
+
+  listen(server)
+}
+
+async function listen(server) {
+  if (server.scannerManager.isRunning) {
+    server.listen({ port: 3000, host: '0.0.0.0' }, (err, address) => {
+      if (err) {
+        server.log.error(err)
+        process.exit(1)
+      }
+    })
+  } else {
+    setTimeout(() => {
+      listen(server)
+    }, 200)
+  }
+}
+
+function getLogger() {
+  let logger = {}
+  switch (process.env.NODE_ENV) {
+  case 'development':
+    logger = {
+      level: 'debug',
+      transport: {
+        target: 'pino-pretty',
+        options: { destination: 1 }
+      }
     }
-  })
+    break
+  case 'test':
+    logger = {
+      level: 'silent'
+    }
+    break
+  case 'production':
+    logger = {
+      serializers: {
+        req(req) {
+          return {
+            userAgent: req.headers['user-agent'],
+            method: req.method,
+            url: req.url,
+            hostname: req.hostname,
+            remoteAddress: req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.raw.ip
+          }
+        }
+      },
+      level: 'info'
+    }
+    break
+  }
+  // Special case since in some jest tests we need to set the ENV to prod
+  if (process.env.TEST_ENV) {
+    logger = {
+      level: 'silent'
+    }
+  }
+  return logger
 }
 module.exports = { buildFastify, start }
