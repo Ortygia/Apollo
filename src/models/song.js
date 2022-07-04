@@ -12,16 +12,23 @@ module.exports = (sequelize) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
+    path: {
+      allowNull: false,
+      type: DataTypes.STRING
+    },
     title: {
+      allowNull: false,
       type: DataTypes.STRING
     },
     disk: {
       type: DataTypes.INTEGER
     },
     artist: {
+      allowNull: false,
       type: DataTypes.STRING
     },
     album: {
+      allowNull: false,
       type: DataTypes.STRING
     },
     codec: {
@@ -54,5 +61,15 @@ module.exports = (sequelize) => {
       allowNull: true,
       type: DataTypes.STRING
     }
-  })
+  },
+    {
+      indexes: [
+        // Create a unique index on email
+        {
+          unique: true,
+          fields: ['path']
+        },
+      ]
+    }
+  )
 }
