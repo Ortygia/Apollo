@@ -16,5 +16,16 @@ module.exports = function (fastify, opts, done) {
     fastify.scannerManager.startScan()
     reply.status(200).send(fastify.scannerManager.isScanning)
   })
+  fastify.get('/full', async (req, reply) => {
+    fastify.scannerManager.startScan()
+    reply.status(200).send(fastify.scannerManager.isScanning)
+  })
+  fastify.get('/partial', async (req, reply) => {
+    fastify.scannerManager.startPartialScan()
+    reply.status(200).send(fastify.scannerManager.isScanning)
+  })
+  fastify.get('/test', async (req, reply) => {
+    reply.status(200).send(fastify.scannerManager.isScanning)
+  })
   done()
 }
