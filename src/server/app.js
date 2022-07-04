@@ -37,6 +37,7 @@ async function start(server) {
 }
 
 async function listen(server) {
+  console.log(server.scannerManager.isRunning)
   if (server.scannerManager.isRunning) {
     server.listen({ port: 3000, host: '0.0.0.0' }, (err, address) => {
       if (err) {
@@ -60,6 +61,14 @@ function getLogger() {
       transport: {
         target: 'pino-pretty',
         options: { destination: 1 }
+      },
+      serializers: {
+        req(req) {
+          return {
+            method: req.method,
+            url: req.url
+          }
+        }
       }
     }
     break
