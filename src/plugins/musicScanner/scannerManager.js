@@ -29,5 +29,9 @@ class ScannerManager {
   startScan() {
     this.child.send({ t: 'startScan' })
   }
+
+  startPartialScan() {
+    this.child.send({ t: 'startPartialScan' })
+  }
 }
 module.exports = ScannerManager
