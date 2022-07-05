@@ -1,5 +1,4 @@
 const { DataTypes, Sequelize } = require('sequelize')
-
 // We export a function that defines the model.
 // This function will automatically receive as parameter the Sequelize connection object.
 module.exports = (sequelize) => {
@@ -7,10 +6,10 @@ module.exports = (sequelize) => {
     // The following specification of the 'id' attribute could be omitted
     // since it is the default.
     id: {
-      allowNull: false,
-      autoIncrement: true,
+      type: DataTypes.UUID,
       primaryKey: true,
-      type: DataTypes.INTEGER
+      allowNull: false,
+      defaultValue: DataTypes.UUIDV4
     },
     path: {
       allowNull: false,
@@ -60,16 +59,20 @@ module.exports = (sequelize) => {
     musicBrainzTrackId: {
       allowNull: true,
       type: DataTypes.STRING
+    },
+    albumId: {
+      allowNull: true,
+      type: DataTypes.UUIDV4
     }
   },
-    {
-      indexes: [
-        // Create a unique index on email
-        {
-          unique: true,
-          fields: ['path']
-        },
-      ]
-    }
+  {
+    indexes: [
+      // Create a unique index on email
+      {
+        unique: true,
+        fields: ['path']
+      }
+    ]
+  }
   )
 }

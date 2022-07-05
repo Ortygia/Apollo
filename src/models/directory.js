@@ -7,10 +7,10 @@ module.exports = (sequelize) => {
     // The following specification of the 'id' attribute could be omitted
     // since it is the default.
     id: {
-      allowNull: false,
-      autoIncrement: true,
+      type: DataTypes.UUID,
       primaryKey: true,
-      type: DataTypes.INTEGER
+      allowNull: false,
+      defaultValue: DataTypes.UUIDV4
     },
     path: {
       allowNull: false,
