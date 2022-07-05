@@ -51,7 +51,7 @@ class MusicScanner extends EventEmitter {
     // if (this.scanning) return false
     console.time('fullScan')
     this.updateScanStatus(true)
-    await Walk.walk('/mnt/g/aa', walkFunc.bind(this))
+    await Walk.walk('/mnt/h/Music', walkFunc.bind(this))
     // walkFunc must be async, or return a Promise
     async function walkFunc(err, pathname, dirent) {
       if (err) {
@@ -59,7 +59,7 @@ class MusicScanner extends EventEmitter {
         return null
       }
       if (dirent.isDirectory()) {
-        if (pathname === '/mnt/g/aa') return true
+        if (pathname === '/mnt/h/Music') return true
         const stats = fs.statSync(pathname)
         this.updateOrCreate(this.db.models.directory, { path: pathname }, { path: pathname, mtime: stats.mtimeMs })
       }
@@ -83,37 +83,27 @@ class MusicScanner extends EventEmitter {
     const unchanged = []
     for (const directory of directories) {
       const path = directory.dataValues.path
-      if (path === '/mnt/g/aa') continue
+      if (path === '/mnt/h/Music') continue
       this.log.debug(`Checking unchanged list for dir ${path}`)
-
-      if (!unchanged.some(v => path.includes(v))) {
-        this.log.debug(`Scanning dir ${path}`)
-        // There's at least on
-        if (!fs.existsSync(path)) {
-          this.log.debug(`Deleting dir ${path}`)
-          await this.db.query(`DELETE FROM directories WHERE path like '%${path}%'`)
-          await this.db.query(`DELETE FROM songs WHERE path like '%${path}%'`)
-          await this.db.query(`DELETE FROM albums WHERE path like '%${p.resolve(path, '..', '..')}%'`)
-
-          continue
-        }
-        /*       console.log(unchanged.length)
-      path.resolve(path, '..', '..');
-      for (const dir of unchanged) {
-        if (String(path).includes(dir) ) continue  walk
-      } */
-        const mtime = directory.dataValues.mtime
-        const stats = fs.statSync(path)
-        if (stats.mtimeMs > mtime) {
-          this.walkDirectory(path)
-        } else {
-          unchanged.push(path)
-          this.log.debug(`Directory ${path} has not changed`)
-        }
+      this.log.debug(`Scanning dir ${path}`)
+      if (!fs.existsSync(path)) {
+        this.log.debug(`Deleting dir ${path}`)
+        await this.db.query(`DELETE FROM directories WHERE path like '%${path}%'`)
+        await this.db.query(`DELETE FROM songs WHERE path like '%${path}%'`)
+        await this.db.query(`DELETE FROM albums WHERE path like '%${p.resolve(path, '..', '..')}%'`)
+        continue
       }
+      const mtime = directory.dataValues.mtime
+      const stats = fs.statSync(path)
+      if (stats.mtimeMs > mtime) {
+        await this.walkDirectory(path)
+      } else {
+        this.log.debug(`Directory ${path} has not changed`)
+      }
+      // }
     }
     // this.updateAlbums()
-    this.createAlbums()
+    // await this.createAlbums()
     console.timeEnd('partialScan')
   }
 
@@ -129,12 +119,12 @@ class MusicScanner extends EventEmitter {
       }
       if (dirent.isDirectory()) {
         const stats = fs.statSync(path)
-        this.updateOrCreate(this.db.models.directory, { path: pathname }, { path: pathname, mtime: stats.mtimeMs })
+        await this.updateOrCreate(this.db.models.directory, { path: pathname }, { path: pathname, mtime: stats.mtimeMs })
       }
       if (dirent.isFile()) {
         if (dirent.name.endsWith('.flac')) {
           const metadata = await mm.parseFile(pathname)
-          this.updateOrCreate(this.db.models.song, { path: pathname }, {
+          await this.updateOrCreate(this.db.models.song, { path: pathname }, {
             path: pathname,
             title: metadata.common.title || 'Unknown',
             disk: metadata.common.disk.no,
@@ -179,7 +169,7 @@ class MusicScanner extends EventEmitter {
     // if (this.scanning) return false
     this.updateScanStatus(true)
     console.time('scan')
-    await Walk.walk('/mnt/g/aa', walkFunc.bind(this))
+    await Walk.walk('/mnt/h/Music', walkFunc.bind(this))
     console.timeEnd('scan')
     // walkFunc must be async, or return a Promise
     async function walkFunc(err, pathname, dirent) {
@@ -188,7 +178,7 @@ class MusicScanner extends EventEmitter {
         return null
       }
       if (dirent.isDirectory()) {
-        if(pathname === '/mnt/g/aa') return true
+        if(pathname === '/mnt/h/Music') return true
         const directory = await this.db.models.directory.findOne({ where: { path: pathname } })
         const stats = fs.statSync(pathname)
         if (!directory) {
@@ -307,7 +297,7 @@ class MusicScanner extends EventEmitter {
         await this.db.models.album.create({
           path: p.resolve(_album.dataValues.path, '..', '..'),
           name: _album.dataValues.album,
-          year: _album.dataValues.year
+          year: _album.dataValues.year || 'Unknown'
         })
       }
     }
