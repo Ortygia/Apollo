@@ -1,7 +1,8 @@
 'use strict'
 
-module.exports = function (fastify, opts, done) {
-  fastify.get('/:artistName', async (req, reply) => {
+import { FastifyInstance } from 'fastify'
+async function indexRoutes(fastify: FastifyInstance) {
+/*   fastify.get('/:artistName', async (req, reply) => {
     const searchArtist = fastify.mapi.searchArtist(decodeURI(req.params.artistName))
     const artistId = (await searchArtist).artists[0].id
     const getArtist = await fastify.mapi.getArtist(artistId, ['url-rels'])
@@ -23,9 +24,10 @@ module.exports = function (fastify, opts, done) {
   fastify.get('/partial', async (req, reply) => {
     fastify.scannerManager.startPartialScan()
     reply.status(200).send(fastify.scannerManager.isScanning)
+  }) */
+  fastify.get('/', async (req, reply) => {
+    reply.status(200).send('Hello from ts2aa')
   })
-  fastify.get('/test', async (req, reply) => {
-    reply.status(200).send(fastify.scannerManager.isScanning)
-  })
-  done()
 }
+
+export default indexRoutes
