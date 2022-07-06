@@ -81,3 +81,5 @@ apollo.db
 
 
 .clinic
+apollo_h.db
+out/

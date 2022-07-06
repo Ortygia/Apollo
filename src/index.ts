@@ -1,5 +1,5 @@
 'use strict'
-const { buildFastify, start } = require('./src/server/app')
+import { buildFastify, start } from './server/app'
 // const { fork } = require('child_process')
 
 async function run() {

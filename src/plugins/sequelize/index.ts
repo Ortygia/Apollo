@@ -1,27 +1,28 @@
 'use strict'
 
-const fastifyPlugin = require('fastify-plugin')
-const Sequelize = require('sequelize')
-const defaults = {
-  instance: 'sequelize',
-  sequelizeOptions: {}
+import { Sequelize, DataTypes } from 'sequelize'
+import fp from 'fastify-plugin'
+import { FastifyInstance, FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
+
+export interface SequelizePluginOptions {
+  dialect: string
+  storage: string
 }
-
-async function sequelizePlugin (fastify, opts, done) {
+const ConnectDB: FastifyPluginAsync<SequelizePluginOptions> = async (
+  fastify: FastifyInstance,
+  options: FastifyPluginOptions
+) => {
   const log = fastify.log.child({ module: 'Database' })
-
-  const options = Object.assign({}, defaults, opts)
-  const sequelize = new Sequelize(options.sequelizeOptions)
+  const sequelize = new Sequelize(options)
   const models = [require('../../models/song')]
   for (const model of models) {
-    model(sequelize, Sequelize.DataTypes)
+    model(sequelize, DataTypes)
   }
   await sequelize.sync({ force: false, logging: false })
   try {
     // first connection
     await sequelize.authenticate()
     log.info('Database connection is successfully established.')
-    done()
   } catch (err) {
     log.info(`Connection could not established: ${err}`)
     throw (err)
@@ -36,4 +37,4 @@ async function sequelizePlugin (fastify, opts, done) {
   )
 }
 
-module.exports = fastifyPlugin(sequelizePlugin)
+export default fp(ConnectDB)

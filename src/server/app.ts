@@ -1,29 +1,23 @@
 'use strict'
-
-require('dotenv').config()
-const fastify = require('fastify')
-
-async function buildFastify() {
+import 'dotenv/config'
+import fastify, { FastifyInstance, FastifyRequest } from 'fastify'
+import sequelize from '../plugins/sequelize/index'
+import mApi from '../plugins/mApi'
+import index from './routes/index'
+export async function buildFastify() {
   // Send SIGHUP to process.
   const serverInstance = fastify({ logger: getLogger() })
-  serverInstance.register(require('./routes/index'))
-  serverInstance.register(
-    require('../plugins/sequelize'),
-    {
-      sequelizeOptions: {
-        dialect: 'sqlite',
-        storage: 'apollo.db'
-      }
-    }
-  )
+  await serverInstance.register(index)
 
-  serverInstance.register(require('../plugins/mApi'))
-  serverInstance.register(require('../plugins/artist/'))
-  serverInstance.register(require('../plugins/musicScanner'))
+  await serverInstance.register(sequelize, { storage: 'apoll.db', dialect: 'sqlite' })
+
+  serverInstance.register(mApi)
+  // serverInstance.register(artist)
+  // serverInstance.register(musicScanner)
   return serverInstance
 }
 
-async function start(server) {
+export async function start(server: FastifyInstance) {
   const signals = ['SIGINT', 'SIGTERM']
   signals.forEach((signal) => {
     process.once(signal, async () => {
@@ -36,8 +30,8 @@ async function start(server) {
   listen(server)
 }
 
-async function listen(server) {
-  console.log(server.scannerManager.isRunning)
+async function listen(server: FastifyInstance) {
+  /*  console.log(server.scannerManager.isRunning)
   if (server.scannerManager.isRunning) {
     server.listen({ port: 3000, host: '0.0.0.0' }, (err, address) => {
       if (err) {
@@ -49,7 +43,15 @@ async function listen(server) {
     setTimeout(() => {
       listen(server)
     }, 200)
-  }
+  } */
+  console.log('Got here listen')
+
+  server.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
+    if (err) {
+      server.log.error(err)
+      process.exit(1)
+    }
+  })
 }
 
 function getLogger() {
@@ -63,7 +65,7 @@ function getLogger() {
         options: { destination: 1 }
       },
       serializers: {
-        req(req) {
+        req(req: FastifyRequest) {
           return {
             method: req.method,
             url: req.url
@@ -80,13 +82,13 @@ function getLogger() {
   case 'production':
     logger = {
       serializers: {
-        req(req) {
+        req(req: FastifyRequest) {
           return {
             userAgent: req.headers['user-agent'],
             method: req.method,
             url: req.url,
             hostname: req.hostname,
-            remoteAddress: req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.raw.ip
+            remoteAddress: req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for']
           }
         }
       },
@@ -102,4 +104,3 @@ function getLogger() {
   }
   return logger
 }
-module.exports = { buildFastify, start }
