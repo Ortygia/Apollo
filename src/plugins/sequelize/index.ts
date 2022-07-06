@@ -31,10 +31,6 @@ const ConnectDB: FastifyPluginAsync<SequelizePluginOptions> = async (
 
   // close sequelize database connection before shutdown
   // 'onClose' is triggered when fastify.close() is invoked to stop the server
-  fastify.addHook(
-    'onClose',
-    (instance, done) => sequelize.close().then(() => done())
-  )
 }
 
 export default fp(ConnectDB)

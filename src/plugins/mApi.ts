@@ -1,6 +1,6 @@
 'use strict'
 import fp from 'fastify-plugin'
-import { FastifyInstance, FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
+import { FastifyInstance, FastifyPluginAsync } from 'fastify'
 import { MusicBrainzApi } from 'musicbrainz-api'
 const mbApi = new MusicBrainzApi({
   appName: 'Apollo',

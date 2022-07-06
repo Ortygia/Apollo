@@ -4,6 +4,7 @@ import fastify, { FastifyInstance, FastifyRequest } from 'fastify'
 import sequelize from '../plugins/sequelize/index'
 import mApi from '../plugins/mApi'
 import index from './routes/index'
+import musicScanner from '../plugins/musicScanner'
 export async function buildFastify() {
   // Send SIGHUP to process.
   const serverInstance = fastify({ logger: getLogger() })
@@ -13,7 +14,7 @@ export async function buildFastify() {
 
   serverInstance.register(mApi)
   // serverInstance.register(artist)
-  // serverInstance.register(musicScanner)
+  serverInstance.register(musicScanner)
   return serverInstance
 }
 
@@ -44,8 +45,6 @@ async function listen(server: FastifyInstance) {
       listen(server)
     }, 200)
   } */
-  console.log('Got here listen')
-
   server.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
     if (err) {
       server.log.error(err)
