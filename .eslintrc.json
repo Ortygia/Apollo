@@ -2,13 +2,10 @@
   "root": true,
 	"env": {
 		"jquery": true,
-		"node": true,
-		"jest": true,
-    "browser": true
+		"jest": true
 	},
 	"plugins": [
 		"jest",
-    "promise",
     "@typescript-eslint"
 	],
 	"extends": [
