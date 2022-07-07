@@ -1,12 +1,18 @@
 
-const cheerio = require('cheerio')
+import { AxiosInstance } from 'axios'
+import cheerio from 'cheerio'
+import { IArtist } from 'musicbrainz-api'
+import { BaseLogger } from 'pino'
+import FANART from '../../utils/fanart'
 class ArtistService {
-  constructor(log, api) {
+  log: BaseLogger
+  axios: AxiosInstance
+  constructor(log: BaseLogger, api: AxiosInstance) {
     this.log = log
     this.axios = api
   }
 
-  async getArtistInfo(artist, artistId) {
+  async getArtistInfo(artist: IArtist, artistId: string) {
     let bio = ''
     let image = ''
     let banner = ''
@@ -17,19 +23,20 @@ class ArtistService {
       this.log.error(e)
       this.log.info('Failed to get banner')
     }
-    for (const rel of artist.relations) {
-      if (rel.url.resource.includes('https://www.allmusic.com/artist/')) {
-        this.log.info(rel.url.resource)
-        image = await this.getAllMusicArtistImage(rel.url.resource)
-        bio = await this.getAllMusicArtistBio(rel.url.resource)
-        break
+    if (artist.relations) {
+      for (const rel of artist.relations) {
+        if (rel.url?.resource.includes('https://www.allmusic.com/artist/')) {
+          this.log.info(rel.url.resource)
+          image = await this.getAllMusicArtistImage(rel.url.resource)
+          bio = await this.getAllMusicArtistBio(rel.url.resource)
+          break
+        }
       }
     }
-
     return { image, bio, banner }
   }
 
-  async getAllMusicArtistImage(artist) {
+  async getAllMusicArtistImage(artist: string) {
     const response = await this.axios.get(artist)
     const $ = cheerio.load(response.data)
     const profile = $('.media-gallery-image')
@@ -38,7 +45,7 @@ class ArtistService {
     return image
   }
 
-  async getAllMusicArtistBio(artist) {
+  async getAllMusicArtistBio(artist: string) {
     const response = await this.axios.get(artist + '/biography')
     const $ = cheerio.load(response.data)
     const profile = $('.text')
@@ -47,10 +54,10 @@ class ArtistService {
     return bio
   }
 
-  async getFanArtArtistBanner(artist) {
-    const fanart = new (require('fanart.tv'))('32abf8f327b3216b23336ab97e1a2c0f')
+  async getFanArtArtistBanner(artist: string) {
+    const fanart = new FANART('32abf8f327b3216b23336ab97e1a2c0f')
     return await fanart.music.artist(artist)
   }
 }
 
-module.exports = ArtistService
+export default ArtistService
