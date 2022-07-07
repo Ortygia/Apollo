@@ -18,10 +18,12 @@ const ConnectDB: FastifyPluginAsync<SequelizePluginOptions> = async (
   for (const model of models) {
     model(sequelize, DataTypes)
   }
+
   await sequelize.sync({ force: false, logging: false })
   try {
     // first connection
     await sequelize.authenticate()
+
     log.info('Database connection is successfully established.')
   } catch (err) {
     log.info(`Connection could not established: ${err}`)
