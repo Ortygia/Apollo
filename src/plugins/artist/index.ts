@@ -1,8 +1,11 @@
-const { setupCache } = require('axios-cache-adapter')
-const axios = require('axios')
+import fp from 'fastify-plugin'
+import { FastifyInstance, FastifyPluginAsync } from 'fastify'
+import axios from 'axios'
+import { setupCache } from 'axios-cache-adapter'
+import ArtistService from './service'
+
 'use strict'
-const fastifyPlugin = require('fastify-plugin')
-const ArtistService = require('./service')
+
 const cache = setupCache({
   maxAge: 15 * 60 * 1000
 })
@@ -11,13 +14,13 @@ const cache = setupCache({
 const api = axios.create({
   adapter: cache.adapter
 })
-async function artistPlugin(fastify, opts, done) {
+const artistService: FastifyPluginAsync = async (
+  fastify: FastifyInstance
+) => {
   const log = fastify.log.child({ module: 'User' })
 
   const artistService = new ArtistService(log, api)
   fastify.decorate('artist', artistService)
   fastify.decorate('acache', cache)
-  done()
 }
-
-module.exports = fastifyPlugin(artistPlugin)
+export default fp(artistService)
