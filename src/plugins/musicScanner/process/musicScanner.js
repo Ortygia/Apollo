@@ -2,13 +2,9 @@ const Walk = require('@root/walk')
 const mm = require('music-metadata')
 const Sequelize = require('sequelize')
 const EventEmitter = require('node:events')
-const SequelizeSimpleCache = require('sequelize-simple-cache')
 const p = require('path')
 const fsp = require('fs/promises')
 const fs = require('fs')
-const directory = require('../../../models/directory')
-const path = require('node:path')
-const { Op } = require('sequelize')
 class MusicScanner extends EventEmitter {
   constructor(mediaFolder, log) {
     super()
@@ -52,7 +48,7 @@ class MusicScanner extends EventEmitter {
     // if (this.scanning) return false
     console.time('fullScan')
     this.updateScanStatus(true)
-    await Walk.walk('/mnt/g/aa', walkFunc.bind(this))
+    await Walk.walk('/Users/ryleegeorge/projects/music/', walkFunc.bind(this))
     // walkFunc must be async, or return a Promise
     async function walkFunc(err, pathname, dirent) {
       if (err) {
@@ -62,11 +58,18 @@ class MusicScanner extends EventEmitter {
       if (dirent.isDirectory()) {
         if (pathname === '/mnt/g/aa') return true
         const stats = fs.statSync(pathname)
-        this.updateOrCreate(this.db.models.directory, { path: pathname }, { path: pathname, mtime: stats.mtimeMs })
+        console.time('DBINSERT')
+        await this.db.models.directory.create({
+          path: pathname,
+          mtime: stats.mtimeMs
+        })
+        console.timeEnd('DBINSERT')
       }
       if (dirent.isFile()) {
         if (dirent.name.endsWith('.flac')) {
+          console.time('fileprocess')
           await this.processFile(pathname)
+          console.timeEnd('fileprocess')
         } else if (dirent.name.includes('cover.')) { // Detect cover files and insert them into the DB on scan
           this.processCover(pathname)
         }
