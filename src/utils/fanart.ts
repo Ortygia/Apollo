@@ -1,6 +1,6 @@
 'use strict'
 import axios from 'axios'
-class FANART {
+class FanArtApi {
   engine: any
   config: any
   apiKey: string
@@ -53,4 +53,4 @@ class FANART {
     })
   }
 }
-export default FANART
+export default FanArtApi

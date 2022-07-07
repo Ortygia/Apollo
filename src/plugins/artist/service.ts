@@ -3,7 +3,7 @@ import { AxiosInstance } from 'axios'
 import cheerio from 'cheerio'
 import { IArtist } from 'musicbrainz-api'
 import { BaseLogger } from 'pino'
-import FANART from '../../utils/fanart'
+import FanArtApi from '../../utils/fanart'
 class ArtistService {
   log: BaseLogger
   axios: AxiosInstance
@@ -37,6 +37,7 @@ class ArtistService {
   }
 
   async getAllMusicArtistImage(artist: string) {
+    // TODO save image locally
     const response = await this.axios.get(artist)
     const $ = cheerio.load(response.data)
     const profile = $('.media-gallery-image')
@@ -46,6 +47,7 @@ class ArtistService {
   }
 
   async getAllMusicArtistBio(artist: string) {
+    // TODO save bio to DB
     const response = await this.axios.get(artist + '/biography')
     const $ = cheerio.load(response.data)
     const profile = $('.text')
@@ -55,7 +57,8 @@ class ArtistService {
   }
 
   async getFanArtArtistBanner(artist: string) {
-    const fanart = new FANART('32abf8f327b3216b23336ab97e1a2c0f')
+    // TODO save image locally
+    const fanart = new FanArtApi('32abf8f327b3216b23336ab97e1a2c0f')
     return await fanart.music.artist(artist)
   }
 }
