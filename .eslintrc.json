@@ -6,7 +6,7 @@
 	},
 	"plugins": [
 		"jest",
-    "@typescript-eslint"
+        "@typescript-eslint"
 	],
 	"extends": [
     "plugin:@typescript-eslint/recommended",
