@@ -5,6 +5,7 @@ import sequelize from '../plugins/sequelize/index'
 import mApi from '../plugins/mApi'
 import index from './routes/index'
 import musicScanner from '../plugins/musicScanner'
+import artistService from '../plugins/artist/index'
 export async function buildFastify() {
   // Send SIGHUP to process.
   const serverInstance = fastify({ logger: getLogger() })
@@ -13,7 +14,7 @@ export async function buildFastify() {
   await serverInstance.register(sequelize, { storage: 'apoll.db', dialect: 'sqlite' })
 
   serverInstance.register(mApi)
-  // serverInstance.register(artist)
+  serverInstance.register(artistService)
   serverInstance.register(musicScanner)
   return serverInstance
 }
