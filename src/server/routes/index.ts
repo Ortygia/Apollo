@@ -20,8 +20,8 @@ async function indexRoutes(fastify: FastifyInstance) {
         };
     }>,
   reply: FastifyReply) => {
-    const searchArtist = await fastify.artist.getFanArtArtistBanner(req.params.artistId)
-    reply.status(200).send(searchArtist.artistbackground[0].url)
+    const url = await fastify.artist.getFanArtArtistBanner(req.params.artistId)
+    reply.status(200).send(url)
   })
   fastify.get('/full', async (req, reply) => {
     fastify.scannerManager.startScan()
