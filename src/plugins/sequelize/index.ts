@@ -1,12 +1,14 @@
 'use strict'
 
-import { Sequelize, DataTypes } from 'sequelize'
+import { Sequelize } from 'sequelize'
 import fp from 'fastify-plugin'
 import { FastifyInstance, FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
+import song from '../../models/song'
 
 export interface SequelizePluginOptions {
   dialect: string
-  storage: string
+  storage: string,
+  logging: boolean,
 }
 const ConnectDB: FastifyPluginAsync<SequelizePluginOptions> = async (
   fastify: FastifyInstance,
@@ -14,9 +16,9 @@ const ConnectDB: FastifyPluginAsync<SequelizePluginOptions> = async (
 ) => {
   const log = fastify.log.child({ module: 'Database' })
   const sequelize = new Sequelize(options)
-  const models = [require('../../models/song')]
+  const models = [song]
   for (const model of models) {
-    model(sequelize, DataTypes)
+    model(sequelize)
   }
 
   await sequelize.sync({ force: false, logging: false })
