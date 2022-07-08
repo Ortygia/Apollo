@@ -6,6 +6,7 @@
     "module": "commonjs",
     "strict": true,
     "strictNullChecks": true,
+    "types": ["node"],
     "typeRoots": ["@types"],
     "noImplicitOverride": true,
 		"noImplicitReturns": true,
