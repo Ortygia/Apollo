@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const Walk = require('@root/walk')
 const mm = require('music-metadata')
 const Sequelize = require('sequelize')
@@ -32,16 +33,16 @@ class MusicScanner extends EventEmitter {
     }
 
     // this.song = cache.init())
-    await sequelize.sync({ force: false, logging: process.env.NODE_ENV === 'production' ? false : console.log })
+    await sequelize.sync({ force: false, logging: process.env.NODE_ENV === 'production' ? false : this.log.info })
 
     this.db = sequelize
     this.db.logging = false
     this.log.info('Scanner started')
   }
 
-  async stopScanning () {
+  //   /*  async stopScanning () {
 
-  }
+  //   } */
 
   updateScanStatus(status) {
     this.emit('scanStatus', status)
@@ -237,19 +238,19 @@ class MusicScanner extends EventEmitter {
   }
 
   async cleanUpOrphanAlbums() {
-    const albums = await this.db.models.album.findAll().then((items) => {
+    await this.db.models.album.findAll().then((items) => {
       return items.map((item) => {
         return item.dataValues.name
       })
     })
-    const songs = await this.db.models.song.findAll({
+    await this.db.models.song.findAll({
       attributes: ['album', 'year', 'path'],
       group: ['album']
     }).then((items) => {
       return items.map((item) => {
         return item.dataValues.album
       })
-    }))
+    })
   }
 
   async updateOrCreate (model, where, newItem) {
