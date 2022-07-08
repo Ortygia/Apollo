@@ -37,7 +37,8 @@
     "sqlite3": "^5.0.8"
   },
   "devDependencies": {
-    "@types/node": "^18.0.2",
+    "@types/events": "^3.0.0",
+    "@types/node": "^18.0.3",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "@typescript-eslint/parser": "^5.30.5",
     "better-sqlite3": "^7.5.3",
