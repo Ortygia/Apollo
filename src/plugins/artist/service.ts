@@ -4,6 +4,10 @@ import cheerio from 'cheerio'
 import { IArtist } from 'musicbrainz-api'
 import { BaseLogger } from 'pino'
 import FanArtApi from '../../utils/fanart'
+import * as util from 'util'
+import { Stream } from 'stream'
+import { createWriteStream, existsSync, mkdirSync, statSync } from 'fs'
+const pipeline = util.promisify(Stream.pipeline)
 class ArtistService {
   log: BaseLogger
   axios: AxiosInstance
@@ -56,10 +60,32 @@ class ArtistService {
     return bio
   }
 
-  async getFanArtArtistBanner(artist: string) {
+  async getFanArtArtistBanner(artist: string): Promise<any> {
     // TODO save image locally
+    if (existsSync(process.cwd() + `/images/${artist}/banner/banner.jpg`)) {
+      return `/images/${artist}/banner/banner.jpg`
+    }
     const fanart = new FanArtApi('32abf8f327b3216b23336ab97e1a2c0f')
-    return await fanart.music.artist(artist)
+    const fArtist = await fanart.music.artist(artist)
+    this.downloadFile(fArtist.artistbackground[0].url, artist, 'banner')
+    return fArtist.artistbackground[0].url
+  }
+
+  async downloadFile(url: string, artistId: string, type: string) {
+    try {
+      const request = await this.axios.get(url, {
+        responseType: 'stream'
+      })
+      const location = process.cwd() + `/images/${artistId}/${type}/banner` + url.slice(-4)
+      if (!existsSync(process.cwd() + `/images/${artistId}/${type}`)) {
+        mkdirSync(process.cwd() + `/images/${artistId}/${type}`, { recursive: true })
+      }
+      await pipeline(request.data, createWriteStream(location))
+      this.log.info(`Download of ${url} successful`)
+    } catch (error) {
+      this.log.error(`Download of ${url} failed`)
+      this.log.error(error)
+    }
   }
 }
 
