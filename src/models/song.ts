@@ -1,7 +1,7 @@
-const { DataTypes, Sequelize } = require('sequelize')
+import { DataTypes, Sequelize, TEXT } from 'sequelize'
 // We export a function that defines the model.
 // This function will automatically receive as parameter the Sequelize connection object.
-module.exports = (sequelize) => {
+export default (sequelize: Sequelize) => {
   sequelize.define('song', {
     // The following specification of the 'id' attribute could be omitted
     // since it is the default.
@@ -46,7 +46,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER
     },
     label: {
-      type: DataTypes.ARRAY(Sequelize.TEXT)
+      type: DataTypes.ARRAY(TEXT)
     },
     musicBrainzRecordingId: {
       allowNull: true,
@@ -54,7 +54,7 @@ module.exports = (sequelize) => {
     },
     musicBrainzArtistId: {
       allowNull: true,
-      type: DataTypes.ARRAY(Sequelize.TEXT)
+      type: DataTypes.ARRAY(TEXT)
     },
     musicBrainzTrackId: {
       allowNull: true,
