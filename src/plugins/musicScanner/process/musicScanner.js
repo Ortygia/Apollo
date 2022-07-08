@@ -5,6 +5,9 @@ const EventEmitter = require('node:events')
 const p = require('path')
 const fsp = require('fs/promises')
 const fs = require('fs')
+const { default: song } = require('../../../models/song')
+const { default: directory } = require('../../../models/directory')
+const { default: album } = require('../../../models/album')
 class MusicScanner extends EventEmitter {
   constructor(mediaFolder, log) {
     super()
@@ -23,9 +26,9 @@ class MusicScanner extends EventEmitter {
       logging: false
     })
 
-    const models = [require('../../../models/song'), require('../../../models/directory'), require('../../../models/album')]
+    const models = [song, directory, album]
     for (const model of models) {
-      model(sequelize, Sequelize.DataTypes)
+      model(sequelize)
     }
 
     // this.song = cache.init())
@@ -33,7 +36,7 @@ class MusicScanner extends EventEmitter {
 
     this.db = sequelize
     this.db.logging = false
-    this.log.info('Started scanner')
+    this.log.info('Scanner started')
   }
 
   async stopScanning () {
@@ -88,12 +91,10 @@ class MusicScanner extends EventEmitter {
     for (const directory of directories) {
       const path = directory.dataValues.path
       if (path === '/mnt/g/aa') continue
-      // this.log.debug(`Scanning dir ${path}`)
       if (!fs.existsSync(path)) {
-        // this.log.debug(`Deleting dir ${path}`)
-        await this.db.query(`DELETE FROM directories WHERE path like '%${path}%'`)
-        await this.db.query(`DELETE FROM songs WHERE path like '%${path}%'`)
-        await this.db.query(`DELETE FROM albums WHERE path like '%${p.resolve(path, '..', '..')}%'`)
+        this.db.query(`DELETE FROM directories WHERE path like '%${path}%'`)
+        this.db.query(`DELETE FROM songs WHERE path like '%${path}%'`)
+        this.db.query(`DELETE FROM albums WHERE path like '%${p.resolve(path, '..', '..')}%'`)
         continue
       }
       const mtime = directory.dataValues.mtime
@@ -248,10 +249,7 @@ class MusicScanner extends EventEmitter {
       return items.map((item) => {
         return item.dataValues.album
       })
-    })
-    console.log(albums)
-
-    console.log(songs)
+    }))
   }
 
   async updateOrCreate (model, where, newItem) {
