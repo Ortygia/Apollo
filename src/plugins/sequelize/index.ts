@@ -4,6 +4,8 @@ import { Sequelize } from 'sequelize'
 import fp from 'fastify-plugin'
 import { FastifyInstance, FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
 import song from '../../models/song'
+import directory from '../../models/directory'
+import album from '../../models/album'
 
 export interface SequelizePluginOptions {
   dialect: string
@@ -16,8 +18,9 @@ const ConnectDB: FastifyPluginAsync<SequelizePluginOptions> = async (
 ) => {
   const log = fastify.log.child({ module: 'Database' })
   const sequelize = new Sequelize(options)
-  const models = [song]
+  const models = [song, directory, album]
   for (const model of models) {
+    log.debug(`Loading model: ${model}`)
     model(sequelize)
   }
 
