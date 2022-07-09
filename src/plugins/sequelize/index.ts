@@ -3,9 +3,9 @@
 import { Sequelize } from 'sequelize'
 import fp from 'fastify-plugin'
 import { FastifyInstance, FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
-import song from '../../models/song'
+import song, { Song } from '../../models/song'
 import directory from '../../models/directory'
-import album from '../../models/album'
+import album, { Album } from '../../models/album'
 
 export interface SequelizePluginOptions {
   dialect: string
@@ -24,6 +24,8 @@ const ConnectDB: FastifyPluginAsync<SequelizePluginOptions> = async (
     model(sequelize)
   }
 
+  Album.hasMany(Song, { foreignKey: 'albumId', as: 'songs' })
+  Song.belongsTo(Album, { foreignKey: 'albumId', as: 'album' })
   await sequelize.sync({ force: false, logging: false })
   try {
     // first connection
