@@ -125,7 +125,7 @@ class MusicScanner extends EventEmitter {
             path: pathname,
             title: metadata.common.title || 'Unknown',
             disk: metadata.common.disk.no,
-            album: metadata.common.album || 'Unknown',
+            albumName: metadata.common.album || 'Unknown',
             artist: metadata.common.artist || 'Unknown',
             track: metadata.common.track.no,
             codec: metadata.format.codec,
@@ -153,7 +153,7 @@ class MusicScanner extends EventEmitter {
         path: pathname,
         title: metadata.common.title || 'Unknown',
         disk: metadata.common.disk.no,
-        album: metadata.common.album || 'Unknown',
+        albumName: metadata.common.album || 'Unknown',
         artist: metadata.common.artist || 'Unknown',
         track: metadata.common.track.no,
         codec: metadata.format.codec,
@@ -196,7 +196,7 @@ class MusicScanner extends EventEmitter {
         path,
         title: metadata.common.title || 'Unknown',
         disk: metadata.common.disk.no,
-        album: metadata.common.album || 'Unknown',
+        albumName: metadata.common.album || 'Unknown',
         artist: metadata.common.artist || 'Unknown',
         track: metadata.common.track.no,
         codec: metadata.format.codec,
@@ -213,13 +213,13 @@ class MusicScanner extends EventEmitter {
 
   async updateAlbums() {
     const albums = await Song.findAll({
-      attributes: ['album', 'year', 'path', 'albumId'],
-      group: ['album']
+      attributes: ['albumName', 'year', 'path', 'albumId', 'artist'],
+      group: ['albumName']
     })
     for (const album of albums) {
       const _dbAlbum = await Album.findOne({
         where: {
-          name: album.album,
+          name: album.albumName,
           year: album.year || 'Unknown'
         }
       })
@@ -228,10 +228,13 @@ class MusicScanner extends EventEmitter {
       } else {
         const _newAlbum = await Album.create({
           path: p.resolve(album.path, '..', '..'),
-          name: album.album,
+          artistName: album.artist,
+          name: album.albumName,
           year: album.year || 'Unknown'
         })
-        this.db.query(`UPDATE songs SET albumId="${_newAlbum.id}" WHERE path LIKE "%${p.resolve(_newAlbum.path, '..')}%"`)
+        await this.db.query(`UPDATE songs SET albumId="${_newAlbum.id}" WHERE albumName="${album.albumName}"`)
+
+        console.log(await Song.update({ albumId: _newAlbum.id }, { where: { albumName: album.albumName } }))
       }
     }
   }
