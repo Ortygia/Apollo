@@ -1,6 +1,7 @@
 'use strict'
 
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import { Song } from '../../models/song'
 async function indexRoutes(fastify: FastifyInstance) {
   /*  fastify.get('/:artistName', async (req, reply) => {
       const searchArtist = fastify.mapi.searchArtist(decodeURI(req.params.artistName))
@@ -32,6 +33,8 @@ async function indexRoutes(fastify: FastifyInstance) {
     reply.status(200).send(fastify.scannerManager.isScanning)
   })
   fastify.get('/', async (req, reply) => {
+    const songs = await Song.findAll()
+    await console.log(songs)
     reply.status(200).send('Hello from ts2aa')
   })
 }
