@@ -11,7 +11,7 @@ export async function buildFastify() {
   const serverInstance = fastify({ logger: getLogger() })
   await serverInstance.register(index)
 
-  await serverInstance.register(sequelize, { storage: 'apoll.db', dialect: 'sqlite', logging: false })
+  await serverInstance.register(sequelize, { storage: 'apollo.db', dialect: 'sqlite', logging: false })
 
   serverInstance.register(mApi)
   serverInstance.register(artistService)
