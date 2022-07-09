@@ -1,8 +1,30 @@
-import { DataTypes, Sequelize, TEXT } from 'sequelize'
-// We export a function that defines the model.
-// This function will automatically receive as parameter the Sequelize connection object.
+/* eslint-disable no-use-before-define */
+import { Model, InferAttributes, InferCreationAttributes, DataTypes, Sequelize, TEXT } from 'sequelize'// We export a function that defines the model.
+// This function will automatically receive as parameter the Sequelize connection object.// Exported to load into sequelize
+// Exported to to use in files
+
+export class Song extends Model<InferAttributes<Song>, InferCreationAttributes<Song>> {
+  declare id: string
+  declare path: string
+  declare title: string
+  declare disk: number
+  declare artist: string
+  declare album: string
+  declare codec: string
+  declare sampleRate: number
+  declare bitsPerSample: number
+  declare track: number
+  declare year: number
+  declare label: Array<string>
+  declare musicBrainzRecordingId: string
+  declare musicBrainzArtistId: Array<string>
+  declare musicBrainzTrackId: string
+  declare albumId: string
+}
+
+// Exported to load into sequelize
 export default (sequelize: Sequelize) => {
-  sequelize.define('song', {
+  Song.init({
     // The following specification of the 'id' attribute could be omitted
     // since it is the default.
     id: {
@@ -64,10 +86,10 @@ export default (sequelize: Sequelize) => {
       allowNull: true,
       type: DataTypes.UUIDV4
     }
-  },
-  {
+  }, {
+    sequelize,
+    tableName: 'songs',
     indexes: [
-      // Create a unique index on email
       {
         unique: true,
         fields: ['path']

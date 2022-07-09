@@ -1,9 +1,15 @@
-import { DataTypes, Sequelize } from 'sequelize'
+/* eslint-disable no-use-before-define */
+import { Model, InferAttributes, InferCreationAttributes, DataTypes, Sequelize } from 'sequelize'// We export a function that defines the model.
 
 // We export a function that defines the model.
 // This function will automatically receive as parameter the Sequelize connection object.
+export class Directory extends Model<InferAttributes<Directory>, InferCreationAttributes<Directory>> {
+  declare id: string
+  declare path: string
+  declare mtime: string
+}
 export default (sequelize: Sequelize) => {
-  sequelize.define('directory', {
+  Directory.init({
     // The following specification of the 'id' attribute could be omitted
     // since it is the default.
     id: {
@@ -20,5 +26,5 @@ export default (sequelize: Sequelize) => {
       allowNull: false,
       type: DataTypes.TIME
     }
-  })
+  }, { sequelize, tableName: 'directories' })
 }
