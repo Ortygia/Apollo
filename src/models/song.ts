@@ -9,7 +9,7 @@ export class Song extends Model<InferAttributes<Song>, InferCreationAttributes<S
   declare title: string
   declare disk: number
   declare artist: string
-  declare album: string
+  declare albumName: string
   declare codec: string
   declare sampleRate: number
   declare bitsPerSample: number
@@ -19,7 +19,6 @@ export class Song extends Model<InferAttributes<Song>, InferCreationAttributes<S
   declare musicBrainzRecordingId: string
   declare musicBrainzArtistId: Array<string>
   declare musicBrainzTrackId: string
-  declare albumId: string
 }
 
 // Exported to load into sequelize
@@ -48,7 +47,7 @@ export default (sequelize: Sequelize) => {
       allowNull: false,
       type: DataTypes.STRING
     },
-    album: {
+    albumName: {
       allowNull: false,
       type: DataTypes.STRING
     },
@@ -81,10 +80,6 @@ export default (sequelize: Sequelize) => {
     musicBrainzTrackId: {
       allowNull: true,
       type: DataTypes.STRING
-    },
-    albumId: {
-      allowNull: true,
-      type: DataTypes.UUIDV4
     }
   }, {
     sequelize,

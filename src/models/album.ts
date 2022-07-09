@@ -1,5 +1,6 @@
 /* eslint-disable no-use-before-define */
 import { Model, InferAttributes, InferCreationAttributes, DataTypes, Sequelize } from 'sequelize'// We export a function that defines the model.
+import { Song } from './song'
 
 // We export a function that defines the model.
 // This function will automatically receive as parameter the Sequelize connection object.
@@ -7,6 +8,7 @@ export class Album extends Model<InferAttributes<Album>, InferCreationAttributes
   declare id: string
   declare path: string
   declare name: string
+  declare artistName: string
   declare year: number
 
   // there is no need to use CreationOptional on firstName because nullable attributes
@@ -27,6 +29,10 @@ export default (sequelize: Sequelize) => {
       type: DataTypes.STRING
     },
     name: {
+      allowNull: false,
+      type: DataTypes.STRING
+    },
+    artistName: {
       allowNull: false,
       type: DataTypes.STRING
     },
