@@ -24,7 +24,7 @@ class MusicScanner extends EventEmitter {
   async initialize () {
     const sequelize = new Sequelize({
       dialect: 'sqlite',
-      storage: 'apollo.db',
+      storage: 'deaftone.db',
       logging: false
     })
 

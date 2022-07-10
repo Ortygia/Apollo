@@ -1,11 +1,11 @@
 'use strict'
 const LastFM = require('last-fm')
-const lastfm = new LastFM('f240783eb61d397d198f1d1379353b98', { userAgent: 'Apollo/0.0.1 (https://github.com/112RG/Apollo)' })
+const lastfm = new LastFM('f240783eb61d397d198f1d1379353b98', { userAgent: 'Deaftone/0.0.1 (https://github.com/112RG/Deaftone)' })
 const MusicBrainzApi = require('musicbrainz-api').MusicBrainzApi
 const cheerio = require('cheerio')
 const axios = require('axios').default
 const mbApi = new MusicBrainzApi({
-  appName: 'Apollo',
+  appName: 'Deaftone',
   appVersion: '0.0.1',
   appContactInfo: 'ryleegeorge1@gmail.com'
 })

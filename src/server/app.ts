@@ -15,7 +15,7 @@ export async function buildFastify() {
   await serverInstance.register(artistRoutes, { prefix: '/artists' })
   await serverInstance.register(albumRoutes, { prefix: '/albums' })
 
-  await serverInstance.register(sequelize, { storage: 'apollo.db', dialect: 'sqlite', logging: false })
+  await serverInstance.register(sequelize, { storage: 'deaftone.db', dialect: 'sqlite', logging: false })
 
   serverInstance.register(mApi)
   serverInstance.register(artistService)

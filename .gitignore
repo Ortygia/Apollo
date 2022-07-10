@@ -77,9 +77,9 @@ typings/
 *.sqlite
 
 test_music/
-apollo.db
+deaftone.db
 
 
 .clinic
-apollo_h.db
+deaftone_h.db
 out/

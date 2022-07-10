@@ -3,7 +3,7 @@ import fp from 'fastify-plugin'
 import { FastifyInstance, FastifyPluginAsync } from 'fastify'
 import { MusicBrainzApi } from 'musicbrainz-api'
 const mbApi = new MusicBrainzApi({
-  appName: 'Apollo',
+  appName: 'Deaftone',
   appVersion: '0.0.1',
   appContactInfo: 'ryleegeorge1@gmail.com'
 })

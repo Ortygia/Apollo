@@ -7,7 +7,7 @@ const Sequelize = require('sequelize')
 async function startScanning() {
   const sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: 'apollo.db'
+    storage: 'deaftone.db'
   })
 
   const models = [require('./src/models/song')]
@@ -117,11 +117,9 @@ async function startScanning() {
     }
   })
   this.scanning = false */
-
-
 }
-async function  testFile(){ 
-  const file= mm.parseFile("/mnt/h/Music/C/Chromeo/Chromeo ‎– She's In Control {2004} [Vice Records ‎– Vice 83673-2]/10 Ah oui comme ça.flac")
+async function testFile() {
+  const file = mm.parseFile("/mnt/h/Music/C/Chromeo/Chromeo ‎– She's In Control {2004} [Vice Records ‎– Vice 83673-2]/10 Ah oui comme ça.flac")
   console.log(await file)
 }
 testFile()
