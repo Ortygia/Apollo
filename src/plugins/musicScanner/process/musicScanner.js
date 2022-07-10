@@ -9,6 +9,7 @@ const fs = require('fs')
 const { default: song, Song } = require('../../../models/song')
 const { default: directory, Directory } = require('../../../models/directory')
 const { default: album, Album } = require('../../../models/album')
+const { default: artist, Artist } = require('../../../models/artist')
 class MusicScanner extends EventEmitter {
   constructor(mediaFolder, log) {
     super()
@@ -27,7 +28,7 @@ class MusicScanner extends EventEmitter {
       logging: false
     })
 
-    const models = [song, directory, album]
+    const models = [song, directory, album, artist]
     for (const model of models) {
       model(sequelize)
     }
@@ -72,6 +73,7 @@ class MusicScanner extends EventEmitter {
       return null
     }
     await this.updateAlbums()
+    await this.updateArtists()
     console.timeEnd('fullScan')
   }
 
@@ -99,6 +101,7 @@ class MusicScanner extends EventEmitter {
     }
     // this.updateAlbums()
     await this.updateAlbums()
+    await this.updateArtists()
     await this.cleanUpOrphanAlbums()
     this.updateScanStatus(false)
     console.timeEnd('partialScan')
@@ -212,30 +215,44 @@ class MusicScanner extends EventEmitter {
   }
 
   async updateAlbums() {
-    const albums = await Song.findAll({
-      attributes: ['albumName', 'year', 'path', 'albumId', 'artist'],
+    const songs = await Song.findAll({
+      attributes: ['albumName', 'year', 'path', 'albumId', 'artist', 'id'],
       group: ['albumName']
     })
-    for (const album of albums) {
+    for (const song of songs) {
       const _dbAlbum = await Album.findOne({
         where: {
-          name: album.albumName,
-          year: album.year || 'Unknown'
+          name: song.albumName,
+          year: song.year || 'Unknown'
         }
       })
       if (_dbAlbum) {
         await this.db.query(`UPDATE songs SET albumId="${_dbAlbum.id}" WHERE path LIKE "%${p.resolve(_dbAlbum.path, '..')}%"`)
       } else {
         const _newAlbum = await Album.create({
-          path: p.resolve(album.path, '..', '..'),
-          artistName: album.artist,
-          name: album.albumName,
-          year: album.year || 'Unknown'
+          path: p.resolve(song.path, '..', '..'),
+          artistName: song.artist,
+          name: song.albumName,
+          year: song.year || 'Unknown'
         })
-        await this.db.query(`UPDATE songs SET albumId="${_newAlbum.id}" WHERE albumName="${album.albumName}"`)
+        await this.db.query(`UPDATE songs SET albumId="${_newAlbum.id}" WHERE albumName="${song.albumName}"`)
 
-        console.log(await Song.update({ albumId: _newAlbum.id }, { where: { albumName: album.albumName } }))
+        // console.log(await Song.update({ albumId: _newAlbum.id }, { where: { albumName: song.albumName } }))
       }
+    }
+  }
+
+  async updateArtists() {
+    console.log('Running')
+    const albums = await Album.findAll({ group: ['artistName'] })
+    console.log(albums)
+    for (const album of albums) {
+      const newArtist = await Artist.create({
+        name: album.artistName
+      })
+      await this.db.query(`UPDATE albums SET artistId="${newArtist.id}" WHERE artistName="${album.artistName}"`)
+
+      // console.log(await Song.update({ albumId: _newAlbum.id }, { where: { albumName: album.albumName } }))
     }
   }
 
