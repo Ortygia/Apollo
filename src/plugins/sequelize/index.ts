@@ -6,6 +6,7 @@ import { FastifyInstance, FastifyPluginAsync, FastifyPluginOptions } from 'fasti
 import song, { Song } from '../../models/song'
 import directory from '../../models/directory'
 import album, { Album } from '../../models/album'
+import artist, { Artist } from '../../models/artist'
 
 export interface SequelizePluginOptions {
   dialect: string
@@ -18,7 +19,7 @@ const ConnectDB: FastifyPluginAsync<SequelizePluginOptions> = async (
 ) => {
   const log = fastify.log.child({ module: 'Database' })
   const sequelize = new Sequelize(options)
-  const models = [song, directory, album]
+  const models = [song, directory, album, artist]
   for (const model of models) {
     log.debug(`Loading model: ${model}`)
     model(sequelize)
@@ -26,7 +27,9 @@ const ConnectDB: FastifyPluginAsync<SequelizePluginOptions> = async (
 
   Album.hasMany(Song, { foreignKey: 'albumId', as: 'songs' })
   Song.belongsTo(Album, { foreignKey: 'albumId', as: 'album' })
+  Artist.hasMany(Album, { foreignKey: 'artistId', as: 'albums' })
   await sequelize.sync({ force: false, logging: false })
+
   try {
     // first connection
     await sequelize.authenticate()
