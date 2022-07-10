@@ -6,10 +6,14 @@ import mApi from '../plugins/mApi'
 import index from './routes/index'
 import musicScanner from '../plugins/musicScanner'
 import artistService from '../plugins/artist/index'
+import artistRoutes from './routes/artists'
+import albumRoutes from './routes/albums'
 export async function buildFastify() {
   // Send SIGHUP to process.
   const serverInstance = fastify({ logger: getLogger() })
   await serverInstance.register(index)
+  await serverInstance.register(artistRoutes, { prefix: '/artists' })
+  await serverInstance.register(albumRoutes, { prefix: '/albums' })
 
   await serverInstance.register(sequelize, { storage: 'apollo.db', dialect: 'sqlite', logging: false })
 
@@ -46,7 +50,7 @@ async function listen(server: FastifyInstance) {
       listen(server)
     }, 200)
   } */
-  server.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
+  server.listen({ port: 3030, host: '0.0.0.0' }, (err) => {
     if (err) {
       server.log.error(err)
       process.exit(1)

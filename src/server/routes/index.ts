@@ -3,6 +3,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { createReadStream, statSync } from 'fs'
 import { Album } from '../../models/album'
+import { Artist } from '../../models/artist'
 import { Song } from '../../models/song'
 import computeRange from '../../utils'
 async function indexRoutes(fastify: FastifyInstance) {
@@ -39,6 +40,19 @@ async function indexRoutes(fastify: FastifyInstance) {
     const album = await Album.findOne({
       where: { id: req.query.id },
 
+      include: { all: true }
+    })
+
+    reply.status(200).send(album)
+  })
+  fastify.get('/getArtist', async (req: FastifyRequest<{
+    Querystring: {
+        id: string,
+    };
+}>,
+  reply: FastifyReply) => {
+    const album = await Artist.findOne({
+      where: { id: req.query.id },
       include: { all: true }
     })
 
