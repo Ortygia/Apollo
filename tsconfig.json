@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "incremental": true,
     "outDir": "./out",
     "allowJs": true,
     "target": "ES2021",
