@@ -10,6 +10,7 @@ const { default: song, Song } = require('../../../models/song')
 const { default: directory, Directory } = require('../../../models/directory')
 const { default: album, Album } = require('../../../models/album')
 const { default: artist, Artist } = require('../../../models/artist')
+let songsToSave = []
 class MusicScanner extends EventEmitter {
   constructor(mediaFolder, log) {
     super()
@@ -33,9 +34,12 @@ class MusicScanner extends EventEmitter {
       model(sequelize)
     }
     await sequelize.sync({ force: false, logging: process.env.NODE_ENV === 'production' ? false : false })
-
     this.db = sequelize
     this.db.logging = false
+
+    Album.hasMany(Song, { foreignKey: 'albumId', as: 'songs' })
+    Song.belongsTo(Album, { foreignKey: 'albumId', as: 'album' })
+    Artist.hasMany(Album, { foreignKey: 'artistId', as: 'albums' })
     this.log.info('Scanner started')
   }
 
@@ -55,7 +59,6 @@ class MusicScanner extends EventEmitter {
         return null
       }
       if (dirent.isDirectory()) {
-        if (pathname === '/mnt/g/aa') return true
         const stats = fs.statSync(pathname)
 
         await Directory.create({
@@ -72,8 +75,12 @@ class MusicScanner extends EventEmitter {
       }
       return null
     }
+    console.time('updateAlbums')
     await this.updateAlbums()
+    console.timeEnd('updateAlbums')
+    console.time('updateArtists')
     await this.updateArtists()
+    console.timeEnd('updateArtists')
     console.timeEnd('fullScan')
   }
 
@@ -84,7 +91,6 @@ class MusicScanner extends EventEmitter {
     const directories = await Directory.findAll()
     for (const directory of directories) {
       const path = directory.dataValues.path
-      if (path === '/mnt/g/aa') continue
       if (!fs.existsSync(path)) {
         this.db.query(`DELETE FROM directories WHERE path like '%${path}%'`)
         this.db.query(`DELETE FROM songs WHERE path like '%${path}%'`)
@@ -94,11 +100,17 @@ class MusicScanner extends EventEmitter {
       const mtime = directory.dataValues.mtime
       const stats = fs.statSync(path)
       if (stats.mtimeMs > mtime) {
+        this.log.debug(`Walking dir ${path} `)
+
         await this.walkDirectory(path)
       } else {
         this.log.debug(`Directory ${path} has not changed`)
       }
     }
+    /*     if (songsToSave > 0) {
+      Song.bulkCreate(songsToSave).then(() => console.log('Saving final'))
+      songsToSave = []
+    } */
     // this.updateAlbums()
     await this.updateAlbums()
     await this.updateArtists()
@@ -118,28 +130,34 @@ class MusicScanner extends EventEmitter {
         return null
       }
       if (dirent.isDirectory()) {
+        const dbDir = await Directory.findOne({ where: { path } })
         const stats = fs.statSync(path)
-        await this.updateOrCreate(this.db.models.directory, { path: pathname }, { path: pathname, mtime: stats.mtimeMs })
+
+        await Directory.findOrCreate({ where: { path: pathname }, defaults: { path: pathname, mtime: stats.mtimeMs } })
       }
       if (dirent.isFile()) {
         if (dirent.name.endsWith('.flac')) {
           const metadata = await mm.parseFile(pathname)
-          await this.updateOrCreate(this.db.models.song, { path: pathname }, {
-            path: pathname,
-            title: metadata.common.title || 'Unknown',
-            disk: metadata.common.disk.no,
-            albumName: metadata.common.album || 'Unknown',
-            artist: metadata.common.artist || 'Unknown',
-            track: metadata.common.track.no,
-            codec: metadata.format.codec,
-            sampleRate: metadata.format.sampleRate,
-            bitsPerSample: metadata.format.bitsPerSample,
-            year: metadata.common.year,
-            label: metadata.common.label,
-            musicBrainzRecordingId: metadata.common.musicbrainz_recordingid,
-            musicBrainzArtistId: metadata.common.musicbrainz_artistid,
-            musicBrainzTrackId: metadata.common.musicbrainz_trackid
+          await Song.findOrCreate({
+            where: { path: pathname },
+            defaults: {
+              path: pathname,
+              title: metadata.common.title || 'Unknown',
+              disk: metadata.common.disk.no,
+              albumName: metadata.common.album || 'Unknown',
+              artist: metadata.common.albumartist || metadata.common.artist || 'Unknown',
+              track: metadata.common.track.no,
+              codec: metadata.format.codec,
+              sampleRate: metadata.format.sampleRate,
+              bitsPerSample: metadata.format.bitsPerSample,
+              year: metadata.common.year,
+              label: metadata.common.label,
+              musicBrainzRecordingId: metadata.common.musicbrainz_recordingid,
+              musicBrainzArtistId: metadata.common.musicbrainz_artistid,
+              musicBrainzTrackId: metadata.common.musicbrainz_trackid
+            }
           })
+
           // this.processFile(pathname)
         } else if (dirent.name.includes('cover.')) { // Detect cover files and insert them into the DB on scan
           this.processCover(pathname)
@@ -152,23 +170,23 @@ class MusicScanner extends EventEmitter {
   async processFile(pathname) {
     try {
       const metadata = await mm.parseFile(pathname)
-      const song = await Song.create({
+      songsToSave.push({
         path: pathname,
         title: metadata.common.title || 'Unknown',
         disk: metadata.common.disk.no,
         albumName: metadata.common.album || 'Unknown',
-        artist: metadata.common.artist || 'Unknown',
+        artist: metadata.common.albumartist || metadata.common.artist || 'Unknown',
         track: metadata.common.track.no,
         codec: metadata.format.codec,
         sampleRate: metadata.format.sampleRate,
         bitsPerSample: metadata.format.bitsPerSample,
-        year: metadata.common.year,
-        label: metadata.common.label,
-        musicBrainzRecordingId: metadata.common.musicbrainz_recordingid,
-        musicBrainzArtistId: metadata.common.musicbrainz_artistid,
-        musicBrainzTrackId: metadata.common.musicbrainz_trackid
+        year: metadata.common.year
+
       })
-      song.save()
+      if (songsToSave.length > 50) {
+        Song.bulkCreate(songsToSave).then(() => console.log('Users data have been saved'))
+        songsToSave = []
+      }
       this.log.debug(`Artist: ${metadata.common.albumartist}, Album: ${metadata.common.album}, Title: ${metadata.common.title}`)
     } catch (err) {
       this.log.error(err)
@@ -194,8 +212,9 @@ class MusicScanner extends EventEmitter {
   }
 
   async processTrack(metadata, path) {
-    await this.updateOrCreate(this.db.models.song, { path },
-      {
+    await Song.findOrCreate({
+      where: { path },
+      defaults: {
         path,
         title: metadata.common.title || 'Unknown',
         disk: metadata.common.disk.no,
@@ -211,7 +230,7 @@ class MusicScanner extends EventEmitter {
         musicBrainzArtistId: metadata.common.musicbrainz_artistid,
         musicBrainzTrackId: metadata.common.musicbrainz_trackid
       }
-    )
+    })
   }
 
   async updateAlbums() {
@@ -227,7 +246,7 @@ class MusicScanner extends EventEmitter {
         }
       })
       if (_dbAlbum) {
-        await this.db.query(`UPDATE songs SET albumId="${_dbAlbum.id}" WHERE path LIKE "%${p.resolve(_dbAlbum.path, '..')}%"`)
+        await this.db.query(`UPDATE songs SET albumId="${_dbAlbum.id}" WHERE albumName="${song.albumName}"`)
       } else {
         const _newAlbum = await Album.create({
           path: p.resolve(song.path, '..', '..'),
@@ -236,53 +255,46 @@ class MusicScanner extends EventEmitter {
           year: song.year || 'Unknown'
         })
         await this.db.query(`UPDATE songs SET albumId="${_newAlbum.id}" WHERE albumName="${song.albumName}"`)
-
-        // console.log(await Song.update({ albumId: _newAlbum.id }, { where: { albumName: song.albumName } }))
       }
     }
   }
 
   async updateArtists() {
     console.log('Running')
-    const albums = await Album.findAll({ group: ['artistName'] })
-    console.log(albums)
+    const albums = await Album.findAll()
     for (const album of albums) {
-      const newArtist = await Artist.create({
-        name: album.artistName
-      })
-      await this.db.query(`UPDATE albums SET artistId="${newArtist.id}" WHERE artistName="${album.artistName}"`)
-
-      // console.log(await Song.update({ albumId: _newAlbum.id }, { where: { albumName: album.albumName } }))
+      const artist = await Artist.findOne({ where: { name: album.artistName } })
+      if (artist) {
+        await this.db.query(`UPDATE albums SET artistId="${artist.id}" WHERE id="${album.id}"`)
+      } else {
+        const newArtist = await Artist.create({
+          name: album.artistName
+        })
+        await this.db.query(`UPDATE albums SET artistId="${newArtist.id}" WHERE id="${album.id}"`)
+      }
     }
+
+    // Drop all artists with no albums
+    const a = await Artist.findAll({
+      include: [{
+        model: Album,
+        as: 'albums',
+        required: false
+      }],
+      where: {
+        $artistId$: null
+      },
+      subQuery: false
+    })
+    a.every((e) => {
+      return e.destroy()
+    })
   }
 
   async cleanUpOrphanAlbums() {
-    await this.db.models.album.findAll().then((items) => {
-      return items.map((item) => {
-        return item.dataValues.name
-      })
-    })
-    await this.db.models.song.findAll({
-      attributes: ['album', 'year', 'path'],
-      group: ['album']
-    }).then((items) => {
-      return items.map((item) => {
-        return item.dataValues.album
-      })
-    })
-  }
-
-  async updateOrCreate (model, where, newItem) {
-    // First try to find the record
-    const foundItem = await model.findOne({ where })
-    if (!foundItem) {
-      // Item not found, create a new one
-      const item = await model.create(newItem)
-      return { item, created: true }
-    }
-    // Found an item, update it
-    const item = await model.update(newItem, { where })
-    return { item, created: false }
+    const artists = await (await Artist.findAll()).map((item) => { return item.name })
+    const albums = await (await Artist.findAll()).map((item) => { return item.name })
+    const songs = await (await Artist.findAll()).map((item) => { return item.name })
   }
 }
 
