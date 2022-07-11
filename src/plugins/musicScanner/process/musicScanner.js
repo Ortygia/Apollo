@@ -25,7 +25,7 @@ class MusicScanner extends EventEmitter {
   async initialize () {
     const sequelize = new Sequelize({
       dialect: 'sqlite',
-      storage: 'deaftone.db',
+      storage: 'deaftone.sqlite',
       logging: false
     })
 
@@ -36,7 +36,6 @@ class MusicScanner extends EventEmitter {
     await sequelize.sync({ force: false, logging: process.env.NODE_ENV === 'production' ? false : false })
     this.db = sequelize
     this.db.logging = false
-
     Album.hasMany(Song, { foreignKey: 'albumId', as: 'songs' })
     Song.belongsTo(Album, { foreignKey: 'albumId', as: 'album' })
     Artist.hasMany(Album, { foreignKey: 'artistId', as: 'albums' })
