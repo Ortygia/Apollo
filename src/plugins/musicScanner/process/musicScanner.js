@@ -130,14 +130,13 @@ class MusicScanner extends EventEmitter {
         return null
       }
       if (dirent.isDirectory()) {
-        const dbDir = await Directory.findOne({ where: { path } })
         const stats = fs.statSync(path)
-
         await Directory.findOrCreate({ where: { path: pathname }, defaults: { path: pathname, mtime: stats.mtimeMs } })
       }
       if (dirent.isFile()) {
         if (dirent.name.endsWith('.flac')) {
           const metadata = await mm.parseFile(pathname)
+          this.log.debug('Updateing ')
           await Song.findOrCreate({
             where: { path: pathname },
             defaults: {
