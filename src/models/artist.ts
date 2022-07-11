@@ -6,6 +6,8 @@ import { Model, InferAttributes, InferCreationAttributes, DataTypes, Sequelize, 
 export class Artist extends Model<InferAttributes<Artist>, InferCreationAttributes<Artist>> {
   declare id: CreationOptional<string>
   declare name: string
+  declare image: string
+  declare bio: string
 }
 export default (sequelize: Sequelize) => {
   Artist.init({
@@ -20,6 +22,15 @@ export default (sequelize: Sequelize) => {
     name: {
       allowNull: false,
       type: DataTypes.STRING
+    },
+    image: {
+      allowNull: true,
+      type: DataTypes.STRING
+    },
+    bio: {
+      allowNull: true,
+      type: DataTypes.STRING
     }
+
   }, { sequelize, tableName: 'artists' })
 }
