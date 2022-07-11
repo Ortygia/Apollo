@@ -84,3 +84,5 @@ deaftone.db
 deaftone_h.db
 out/
 doc.md
+test.js
+deaftone.db-shm
