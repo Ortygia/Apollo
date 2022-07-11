@@ -37,6 +37,11 @@ class ScannerManager {
     })
   }
 
+  restartScanner() {
+    this.child?.kill()
+    this.startChild()
+  }
+
   startScan() {
     this.child?.send({ t: 'startScan' })
   }

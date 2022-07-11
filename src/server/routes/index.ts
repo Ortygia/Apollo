@@ -19,17 +19,10 @@ async function indexRoutes(fastify: FastifyInstance) {
       fastify.scannerManager.startScan()
       reply.status(200).send(fastify.scannerManager.isScanning)
     }) */
-  fastify.get('/getAlbumList', async (req: FastifyRequest<{
-      Params: {
-          artistId: string,
-      };
-  }>,
-  reply: FastifyReply) => {
-    const albums = await Album.findAll({
-      raw: true,
-      nest: true
-    })
-    reply.status(200).send(albums)
+  fastify.get('/restartScanner', async (_req,
+    reply: FastifyReply) => {
+    fastify.scannerManager.restartScanner()
+    reply.status(200).send('Restarted')
   })
   fastify.get('/getArtistAlbum', async (req: FastifyRequest<{
     Querystring: {
