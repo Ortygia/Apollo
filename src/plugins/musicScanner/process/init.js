@@ -1,7 +1,7 @@
 const MusicScanner = require('./musicScanner')
 const logger = require('pino')({
   name: 'MusicScanner',
-  level: 'info',
+  level: 'debug',
   transport: {
     target: 'pino-pretty',
     options: { destination: 1 }
