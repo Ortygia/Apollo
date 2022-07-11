@@ -29,7 +29,6 @@ const ConnectDB: FastifyPluginAsync<SequelizePluginOptions> = async (
   Song.belongsTo(Album, { foreignKey: 'albumId', as: 'album' })
   Artist.hasMany(Album, { foreignKey: 'artistId', as: 'albums' })
   await sequelize.sync({ force: false, logging: false })
-
   try {
     // first connection
     await sequelize.authenticate()

@@ -18,7 +18,9 @@
   },
   "homepage": "https://github.com/112RG/Deaftone#readme",
   "dependencies": {
+    "@fastify/type-provider-typebox": "^2.1.0",
     "@root/walk": "^1.1.0",
+    "@sinclair/typebox": "^0.24.17",
     "axios": "^0.21.1",
     "axios-cache-adapter": "^2.7.3",
     "cheerio": "^1.0.0-rc.10",
