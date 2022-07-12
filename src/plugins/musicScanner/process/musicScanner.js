@@ -113,7 +113,7 @@ class MusicScanner extends EventEmitter {
     // this.updateAlbums()
     await this.updateAlbums()
     await this.updateArtists()
-    await this.cleanUpOrphanAlbums()
+    await this.cleanUpOrphans()
     this.updateScanStatus(false)
     console.timeEnd('partialScan')
   }
@@ -135,25 +135,23 @@ class MusicScanner extends EventEmitter {
       if (dirent.isFile()) {
         if (dirent.name.endsWith('.flac')) {
           const metadata = await mm.parseFile(pathname)
-          this.log.debug('Updateing ')
-          await Song.findOrCreate({
-            where: { path: pathname },
-            defaults: {
-              path: pathname,
-              title: metadata.common.title || 'Unknown',
-              disk: metadata.common.disk.no,
-              albumName: metadata.common.album || 'Unknown',
-              artist: metadata.common.albumartist || metadata.common.artist || 'Unknown',
-              track: metadata.common.track.no,
-              codec: metadata.format.codec,
-              sampleRate: metadata.format.sampleRate,
-              bitsPerSample: metadata.format.bitsPerSample,
-              year: metadata.common.year,
-              label: metadata.common.label,
-              musicBrainzRecordingId: metadata.common.musicbrainz_recordingid,
-              musicBrainzArtistId: metadata.common.musicbrainz_artistid,
-              musicBrainzTrackId: metadata.common.musicbrainz_trackid
-            }
+          // this.log.debug(metadata.common)
+          await Song.upsert({
+            path: pathname,
+            title: metadata.common.title || 'Unknown',
+            disk: metadata.common.disk.no,
+            albumName: metadata.common.album || 'Unknown',
+            artist: metadata.common.albumartist || metadata.common.artist || 'Unknown',
+            track: metadata.common.track.no,
+            codec: metadata.format.codec,
+            sampleRate: metadata.format.sampleRate,
+            bitsPerSample: metadata.format.bitsPerSample,
+            year: metadata.common.year,
+            label: metadata.common.label,
+            musicBrainzRecordingId: metadata.common.musicbrainz_recordingid,
+            musicBrainzArtistId: metadata.common.musicbrainz_artistid,
+            musicBrainzTrackId: metadata.common.musicbrainz_trackid
+
           })
 
           // this.processFile(pathname)
@@ -234,17 +232,18 @@ class MusicScanner extends EventEmitter {
   async updateAlbums() {
     const songs = await Song.findAll({
       attributes: ['albumName', 'year', 'path', 'albumId', 'artist', 'id'],
-      group: ['albumName']
+      group: ['albumName', 'artist']
     })
     for (const song of songs) {
       const _dbAlbum = await Album.findOne({
         where: {
           name: song.albumName,
+          artistName: song.artist,
           year: song.year || 'Unknown'
         }
       })
       if (_dbAlbum) {
-        await this.db.query(`UPDATE songs SET albumId="${_dbAlbum.id}" WHERE albumName="${song.albumName}"`)
+        await this.db.query(`UPDATE songs SET albumId="${_dbAlbum.id}" WHERE path="${song.path}"`)
       } else {
         const _newAlbum = await Album.create({
           path: p.resolve(song.path, '..', '..'),
@@ -252,47 +251,64 @@ class MusicScanner extends EventEmitter {
           name: song.albumName,
           year: song.year || 'Unknown'
         })
-        await this.db.query(`UPDATE songs SET albumId="${_newAlbum.id}" WHERE albumName="${song.albumName}"`)
+        await _newAlbum.save()
+        await this.db.query(`UPDATE songs SET albumId="${_newAlbum.id}" WHERE path="${song.path}"`)
       }
     }
   }
 
   async updateArtists() {
     console.log('Running')
-    const albums = await Album.findAll()
+    const albums = await Song.findAll({
+      attributes: ['albumName', 'year', 'path', 'albumId', 'artist', 'id'],
+      group: ['albumName']
+    })
     for (const album of albums) {
-      const artist = await Artist.findOne({ where: { name: album.artistName } })
+      const artist = await Artist.findOne({ where: { name: album.artist } })
       if (artist) {
-        await this.db.query(`UPDATE albums SET artistId="${artist.id}" WHERE id="${album.id}"`)
+        await this.db.query(`UPDATE albums SET artistId="${artist.id}" WHERE name="${album.albumName}" AND artistName="${album.artist}"`)
       } else {
         const newArtist = await Artist.create({
-          name: album.artistName
+          name: album.artist
         })
-        await this.db.query(`UPDATE albums SET artistId="${newArtist.id}" WHERE id="${album.id}"`)
+        await newArtist.save()
+        console.log(newArtist)
+        await this.db.query(`UPDATE albums SET artistId="${newArtist.id}" WHERE name="${album.albumName}" AND artistName="${album.artist}"`)
       }
     }
+  }
 
-    // Drop all artists with no albums
-    const a = await Artist.findAll({
+  async cleanUpOrphans() {
+    const a = await Album.findAll({
+      include: [{
+        model: Song,
+        as: 'songs',
+        required: false
+      }],
+      where: {
+        '$songs.id$': null
+      },
+      subQuery: false
+    })
+    a.every((e) => {
+      console.log(e.title)
+      return e.destroy()
+    })
+    const art = await Artist.findAll({
       include: [{
         model: Album,
         as: 'albums',
         required: false
       }],
       where: {
-        $artistId$: null
+        '$albums.id$': null
       },
       subQuery: false
     })
-    a.every((e) => {
+    art.every((e) => {
+      console.log(e.name)
       return e.destroy()
     })
-  }
-
-  async cleanUpOrphanAlbums() {
-    const artists = await (await Artist.findAll()).map((item) => { return item.name })
-    const albums = await (await Artist.findAll()).map((item) => { return item.name })
-    const songs = await (await Artist.findAll()).map((item) => { return item.name })
   }
 }
 
