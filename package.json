@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/112RG/Deaftone#readme",
   "dependencies": {
+    "@fastify/sensible": "^5.1.0",
     "@fastify/type-provider-typebox": "^2.1.0",
     "@root/walk": "^1.1.0",
     "@sinclair/typebox": "^0.24.17",

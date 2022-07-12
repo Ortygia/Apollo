@@ -8,6 +8,7 @@ import musicScanner from '../plugins/musicScanner'
 import artistService from '../plugins/artist/index'
 import artistRoutes from './routes/artists'
 import albumRoutes from './routes/albums'
+import fastifySensible from '@fastify/sensible'
 export async function buildFastify() {
   // Send SIGHUP to process.
   const serverInstance = fastify({ logger: getLogger() })
@@ -20,6 +21,7 @@ export async function buildFastify() {
   serverInstance.register(mApi)
   serverInstance.register(artistService)
   serverInstance.register(musicScanner)
+  serverInstance.register(fastifySensible)
   return serverInstance
 }
 

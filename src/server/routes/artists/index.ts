@@ -27,6 +27,8 @@ async function artistRoutes(fastify: FastifyInstance) {
         [fastify.db.Sequelize.col('Albums.year'), 'DESC']
       ]
     })
+
+    if (!artist) return reply.notFound()
     reply.status(200).send(artist)
   })
   /**
