@@ -1,4 +1,5 @@
 import { ChildProcess, fork } from 'child_process'
+import path = require('path')
 import { BaseLogger } from 'pino'
 
 interface Event {
@@ -18,7 +19,7 @@ class ScannerManager {
   }
 
   startChild() {
-    this.child = fork('./src/plugins/musicScanner/process/init.js')
+    this.child = fork(path.join(__dirname, './process/init.js'))
     this.child.on('exit', (code: any, signal: any) => {
       this.log.info('musicScanner process exited with ' +
                 `code ${code} and signal ${signal}`)
