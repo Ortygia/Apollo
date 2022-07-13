@@ -1,4 +1,9 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+import song, { Song } from '../../../models/song'
+import directory, { Directory } from '../../../models/directory'
+import album, { Album } from '../../../models/album'
+import artist, { Artist } from '../../../models/artist'
+
 const Walk = require('@root/walk')
 const mm = require('music-metadata')
 const Sequelize = require('sequelize')
@@ -6,11 +11,8 @@ const EventEmitter = require('node:events')
 const p = require('path')
 const fsp = require('fs/promises')
 const fs = require('fs')
-const { default: song, Song } = require('../../../models/song')
-const { default: directory, Directory } = require('../../../models/directory')
-const { default: album, Album } = require('../../../models/album')
-const { default: artist, Artist } = require('../../../models/artist')
 let songsToSave = []
+let songsFailedToSave = []
 class MusicScanner extends EventEmitter {
   constructor(mediaFolder, log) {
     super()
@@ -50,7 +52,7 @@ class MusicScanner extends EventEmitter {
     // if (this.scanning) return false
     console.time('fullScan')
     this.updateScanStatus(true)
-    await Walk.walk('/mnt/g/aa', walkFunc.bind(this))
+    await Walk.walk('/mnt/h/Music', walkFunc.bind(this))
     // walkFunc must be async, or return a Promise
     async function walkFunc(err, pathname, dirent) {
       if (err) {
@@ -81,6 +83,7 @@ class MusicScanner extends EventEmitter {
     await this.updateArtists()
     console.timeEnd('updateArtists')
     console.timeEnd('fullScan')
+    console.log(songsFailedToSave)
   }
 
   async startPartialScan() {
@@ -185,6 +188,7 @@ class MusicScanner extends EventEmitter {
       }
       this.log.debug(`Artist: ${metadata.common.albumartist}, Album: ${metadata.common.album}, Title: ${metadata.common.title}`)
     } catch (err) {
+      songsFailedToSave = songsToSave + songsFailedToSave
       this.log.error(err)
       return null
     }
@@ -243,7 +247,7 @@ class MusicScanner extends EventEmitter {
         }
       })
       if (_dbAlbum) {
-        await this.db.query(`UPDATE songs SET albumId="${_dbAlbum.id}" WHERE path="${song.path}"`)
+        await this.db.query(`UPDATE songs SET albumId="${_dbAlbum.id}" WHERE albumName="${song.albumName.replaceAll('"', '')}" AND artist="${song.artist}"`)
       } else {
         const _newAlbum = await Album.create({
           path: p.resolve(song.path, '..', '..'),
@@ -252,7 +256,7 @@ class MusicScanner extends EventEmitter {
           year: song.year || 'Unknown'
         })
         await _newAlbum.save()
-        await this.db.query(`UPDATE songs SET albumId="${_newAlbum.id}" WHERE path="${song.path}"`)
+        await this.db.query(`UPDATE songs SET albumId="${_newAlbum.id}" WHERE albumName="${song.albumName.replaceAll('"', '')}" AND artist="${song.artist}"`)
       }
     }
   }
@@ -266,14 +270,14 @@ class MusicScanner extends EventEmitter {
     for (const album of albums) {
       const artist = await Artist.findOne({ where: { name: album.artist } })
       if (artist) {
-        await this.db.query(`UPDATE albums SET artistId="${artist.id}" WHERE name="${album.albumName}" AND artistName="${album.artist}"`)
+        await this.db.query(`UPDATE albums SET artistId="${artist.id}" WHERE name="${album.albumName.replaceAll('"', '')}" AND artistName="${album.artist}"`)
       } else {
         const newArtist = await Artist.create({
           name: album.artist
         })
         await newArtist.save()
         console.log(newArtist)
-        await this.db.query(`UPDATE albums SET artistId="${newArtist.id}" WHERE name="${album.albumName}" AND artistName="${album.artist}"`)
+        await this.db.query(`UPDATE albums SET artistId="${newArtist.id}" WHERE name="${album.albumName.replaceAll('"', '')}" AND artistName="${album.artist}"`)
       }
     }
   }
