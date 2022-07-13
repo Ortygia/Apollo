@@ -10,19 +10,25 @@ import artistRoutes from './routes/artists'
 import albumRoutes from './routes/albums'
 import fastifySensible from '@fastify/sensible'
 import getLogger from '../utils/logger'
+import config from '../plugins/config'
+import { existsSync, mkdirSync } from 'fs'
+const configDir = process.cwd() + '/data'
+
 export async function buildFastify() {
   // Send SIGHUP to process.
   const serverInstance = fastify({ logger: getLogger() })
   await serverInstance.register(index)
   await serverInstance.register(artistRoutes, { prefix: '/artists' })
   await serverInstance.register(albumRoutes, { prefix: '/albums' })
-
-  await serverInstance.register(sequelize, { storage: 'deaftone.sqlite', dialect: 'sqlite', logging: false })
+  if (!existsSync(configDir)) mkdirSync(configDir)
+  serverInstance.decorate('configDir', configDir)
+  await serverInstance.register(sequelize, { storage: `${configDir}/deaftone.sqlite`, dialect: 'sqlite', logging: false })
 
   serverInstance.register(mApi)
   serverInstance.register(artistService)
   serverInstance.register(musicScanner)
   serverInstance.register(fastifySensible)
+  // serverInstance.register(config)
   return serverInstance
 }
 
