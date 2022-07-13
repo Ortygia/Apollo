@@ -23,7 +23,10 @@ async function albumRoutes(fastify: FastifyInstance) {
     if (req.query.songs) {
       album = await Album.findOne({
         where: { id: req.params.albumId },
-        include: { all: true }
+        include: { all: true },
+        order: [
+          [fastify.db.Sequelize.col('Songs.track'), 'DESC']
+        ]
       })
     } else {
       album = await Album.findOne({
