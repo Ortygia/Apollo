@@ -86,3 +86,4 @@ out/
 doc.md
 test.js
 deaftone.db-shm
+config.json
