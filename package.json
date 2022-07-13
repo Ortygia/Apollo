@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "NODE_ENV=development nodemon --watch './**/*.ts' --exec 'ts-node' src/index.ts",
-    "start": "node ./index"
+    "start": "node ./out/index",
+    "build": "tsc --build"
   },
   "repository": {
     "type": "git",
