@@ -1,13 +1,7 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+const { default: getLogger } = require('../../../utils/logger')
 const MusicScanner = require('./musicScanner')
-const logger = require('pino')({
-  name: 'MusicScanner',
-  level: 'debug',
-  transport: {
-    target: 'pino-pretty',
-    options: { destination: 1 }
-  }
-
-})
+const logger = require('pino')(getLogger('MusicScanenr'))
 const scanner = new MusicScanner('', logger)
 async function run() {
   scanner.initialize()

@@ -1,6 +1,6 @@
 'use strict'
 import 'dotenv/config'
-import fastify, { FastifyInstance, FastifyRequest } from 'fastify'
+import fastify, { FastifyInstance } from 'fastify'
 import sequelize from '../plugins/sequelize/index'
 import mApi from '../plugins/mApi'
 import index from './routes/index'
@@ -9,6 +9,7 @@ import artistService from '../plugins/artist/index'
 import artistRoutes from './routes/artists'
 import albumRoutes from './routes/albums'
 import fastifySensible from '@fastify/sensible'
+import getLogger from '../utils/logger'
 export async function buildFastify() {
   // Send SIGHUP to process.
   const serverInstance = fastify({ logger: getLogger() })
@@ -58,55 +59,4 @@ async function listen(server: FastifyInstance) {
       process.exit(1)
     }
   })
-}
-
-function getLogger() {
-  let logger = {}
-  switch (process.env.NODE_ENV) {
-  case 'development':
-    logger = {
-      level: 'debug',
-      transport: {
-        target: 'pino-pretty',
-        options: { destination: 1 }
-      },
-      serializers: {
-        req(req: FastifyRequest) {
-          return {
-            method: req.method,
-            url: req.url
-          }
-        }
-      }
-    }
-    break
-  case 'test':
-    logger = {
-      level: 'silent'
-    }
-    break
-  case 'production':
-    logger = {
-      serializers: {
-        req(req: FastifyRequest) {
-          return {
-            userAgent: req.headers['user-agent'],
-            method: req.method,
-            url: req.url,
-            hostname: req.hostname,
-            remoteAddress: req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for']
-          }
-        }
-      },
-      level: 'info'
-    }
-    break
-  }
-  // Special case since in some jest tests we need to set the ENV to prod
-  if (process.env.TEST_ENV) {
-    logger = {
-      level: 'silent'
-    }
-  }
-  return logger
 }
